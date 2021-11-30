@@ -58,12 +58,17 @@ cd BAS
 
 ### Inference <a name="54"></a> 
 
-To test the CUB models, you can download the trained models from [ [Google Drive](https://drive.google.com/file/d/1BLaGwXJHOg3sGFGwqKCl0LA8cSsfk7RS/view?usp=sharing) ], then run `xxx.py`:
+To test the CUB models, you can download the trained models from
+BAS-VGG16 [ [Google Drive]( https://drive.google.com/file/d/1phmgYfoLrUU1W5Dr8S1sdlIdW7BVf726/view?usp=sharing) ]
+BAS-Mobilenetv1 [ [Google Drive]( https://drive.google.com/file/d/1RjS0_tXVaERJHnZ25RvHD_EmCsXZQxRS/view?usp=sharing) ]
+BAS-ResNet50 [ [Google Drive](https://drive.google.com/file/d/1NHs1DOooovaFX7VTZi6LlXyLLIMarJN8/view?usp=sharing) ]
+BAS-Inceptionv3 [ [Google Drive](https://drive.google.com/file/d/1Mj_lGjcFwlzYXe4TcJNeXhE0a2iFw9qR/view?usp=sharing) ]
+, then run `BAS_inference.py`:
 ```bash  
 python xxx.py
 ```
 
-To test the ILSVRC models, you can download the trained models from [ [Google Drive](https://drive.google.com/file/d/1BLaGwXJHOg3sGFGwqKCl0LA8cSsfk7RS/view?usp=sharing) ], then run `xxx.py`:
+To test the ILSVRC models, you can download the trained models from [ [Google Drive](https://drive.google.com/file/d/1BLaGwXJHOg3sGFGwqKCl0LA8cSsfk7RS/view?usp=sharing) ], then run `BAS_inference.py`:
 ```bash  
 python xxx.py
 ```
