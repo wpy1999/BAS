@@ -63,7 +63,7 @@ To test the CUB models, you can download the trained models from
 [ [Google Drive]( https://drive.google.com/file/d/1RjS0_tXVaERJHnZ25RvHD_EmCsXZQxRS/view?usp=sharing) ](Mobilenetv1),
 [ [Google Drive](https://drive.google.com/file/d/1NHs1DOooovaFX7VTZi6LlXyLLIMarJN8/view?usp=sharing) ](ResNet50),
 [ [Google Drive](https://drive.google.com/file/d/1Mj_lGjcFwlzYXe4TcJNeXhE0a2iFw9qR/view?usp=sharing) ](Inceptionv3),
-, then run `BAS_inference.py`:
+then run `BAS_inference.py`:
 ```bash  
 python xxx.py
 ```
