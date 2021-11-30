@@ -53,8 +53,9 @@ cd BAS
 * CUB ([http://www.vision.caltech.edu/visipedia/CUB-200-2011.html](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html))
 * ILSVRC ([https://www.image-net.org/challenges/LSVRC/](https://www.image-net.org/challenges/LSVRC/))
 
-### Train <a name="53"></a> 
+### Training <a name="53"></a> 
 
+We will release our training code upon acceptance.
 
 ### Inference <a name="54"></a> 
 
