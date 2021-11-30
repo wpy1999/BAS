@@ -18,7 +18,7 @@ PyTorch implementation of ''Background Activation Suppression for Weakly Supervi
 
 ## 📎 Paper Link <a name="1"></a> 
 > Background Activation Suppression for Weakly Supervised Object Localization ([link](https://arxiv.org/abs/xxx))
-* Authors: Pingyu Wu, Wei Zhai, Yang Cao
+* Authors: Pingyu Wu*, Wei Zhai*, Yang Cao
 * Institution: University of Science and Technology of China (USTC)
 
 ## 💡 Abstract <a name="2"></a> 
