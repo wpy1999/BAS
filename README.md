@@ -130,7 +130,7 @@ This project is for research purpose only, please contact us for the licence of 
 @inproceedings{BAS,
   title={Background Activation Suppression for Weakly Supervised Object Localization},
   author={Pingyu Wu and Wei Zhai and Yang Cao},
-  booktitle={xxx},
+  journal={arXiv preprint arXiv:xxxx.xxxxx},
   year={2021}
 }
 ```
