@@ -94,7 +94,12 @@ cd CUB
 python BAS_inference.py --arch vgg
 ```
 
-To test the ILSVRC models, you can download the trained models from [ [Google Drive](https://drive.google.com/file/d/1BLaGwXJHOg3sGFGwqKCl0LA8cSsfk7RS/view?usp=sharing) ], then run `BAS_inference.py`:
+To test the ILSVRC models, you can download the trained models from
+[ [Google Drive (VGG16)]( https://drive.google.com/file/d/1BSaHxXnK0o-zem9IadrbwqafZnJQt8De/view?usp=sharing) ],
+[ [Google Drive (Mobilenetv1)]( https://drive.google.com/file/d/13MSMH_bzSBXVmNoc0MnFb2pQI0ePquhD/view?usp=sharing) ],
+[ [Google Drive (ResNet50)](https://drive.google.com/file/d/1Zmu1IGPy9lp5PfhC2u_jAcwt1nouRnTb/view?usp=sharing) ],
+[ [Google Drive (Inceptionv3)](https://drive.google.com/file/d/1xq9AOS-vxGtDVBqDvggANlyQuraS6_Is/view?usp=sharing) ],
+then run `BAS_inference.py`:
 ```bash  
 cd ILSVRC
 python BAS_inference.py --arch vgg
