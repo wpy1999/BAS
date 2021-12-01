@@ -91,13 +91,13 @@ To test the CUB models, you can download the trained models from
 then run `BAS_inference.py`:
 ```bash  
 cd CUB
-python BAS_inference.py
+python BAS_inference.py --arch vgg  (mobilenet, resnet, inception)
 ```
 
 To test the ILSVRC models, you can download the trained models from [ [Google Drive](https://drive.google.com/file/d/1BLaGwXJHOg3sGFGwqKCl0LA8cSsfk7RS/view?usp=sharing) ], then run `BAS_inference.py`:
 ```bash  
 cd ILSVRC
-python BAS_inference.py
+python BAS_inference.py --arch vgg  (mobilenet, resnet, inception)
 ```
 
 ## 📊 Experimental Results <a name="7"></a> 
