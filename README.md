@@ -109,6 +109,12 @@ python BAS_inference.py
     </em>
 </p>
 
+<p align="center">
+    <img src="./Img/accuracy.png" width="750"/> <br />
+    <em> 
+    </em>
+</p>
+
 ## ✉️ Statement <a name="8"></a> 
 This project is for research purpose only, please contact us for the licence of commercial use. For any other questions please contact [wpy364755620@mail.ustc.edu.cn](wpy364755620@mail.ustc.edu.cn) or [wzhai056@mail.ustc.edu.cn](wzhai056@mail.ustc.edu.cn).
 
