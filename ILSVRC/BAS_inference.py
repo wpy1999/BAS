@@ -18,7 +18,7 @@ from skimage import measure
 
 class opts(object):
     def __init__(self):
-        self.parser = argparse.ArgumentParser(description='Parameters for BAS evaluation')
+        self.parser = argparse.ArgumentParser(description='BAS Localization evaluation')
         self.parser.add_argument('--input_size',default=256,dest='input_size')
         self.parser.add_argument('--crop_size',default=224,dest='crop_size')
         self.parser.add_argument('--phase', type=str, default='test') 
@@ -36,7 +36,6 @@ class opts(object):
 
 args = opts().parse()
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 
 if args.arch == 'inception':
     args.threshold = 0.3
@@ -94,17 +93,11 @@ classes = os.listdir(val_imagedir)
 classes.sort()
 temp_softmax = nn.Softmax()
 
-
 class_to_idx = {classes[i]:i for i in range(len(classes))}
-
-result = {}
 
 accs = []
 accs_top5 = []
 loc_accs = []
-cls_accs = []
-cls_5_accs = []
-final_cls = []
 final_loc = []
 final_clsloc = []
 final_clsloctop5 = []
@@ -134,13 +127,9 @@ with open(val_list_path, 'r') as f:
 
 for k in range(1000):
     cls = classes[k]
-
-    total = 0
     IoUSet = []
     IoUSetTop5 = []
     LocSet = []
-    ClsSet = []
-    ClsSet_5 = []
 
     for (i, name) in enumerate(files[k]):
 
@@ -196,7 +185,6 @@ for k in range(1000):
             vgg16_out = torch.squeeze(vgg16_out)
             vgg16_out = vgg16_out.numpy()
             out = vgg16_out
-        ClsSet.append(out[0]==class_to_idx[cls])
 
         #handle resize and centercrop for gt_boxes
 
@@ -229,23 +217,18 @@ for k in range(1000):
                 max_iou = iou
                 max_box_num = i
         
-
         LocSet.append(max_iou)
         temp_loc_iou = max_iou
         if out[0] != class_to_idx[cls]:
             max_iou = 0
 
-        result[os.path.join(cls, name)] = bbox   #max_iou
         IoUSet.append(max_iou)
         #cal top5 IoU
         max_iou = 0
-        max_cls = 0
         for i in range(5):
             if out[i] == class_to_idx[cls]:
                 max_iou = temp_loc_iou
-                max_cls = 1
         IoUSetTop5.append(max_iou)
-        ClsSet_5.append(max_cls)
         
     cls_loc_acc = np.sum(np.array(IoUSet) > 0.5) / len(IoUSet)
     final_clsloc.extend(IoUSet)
@@ -253,17 +236,10 @@ for k in range(1000):
     final_clsloctop5.extend(IoUSetTop5)
     loc_acc = np.sum(np.array(LocSet) > 0.5) / len(LocSet)
     final_loc.extend(LocSet)
-    cls_acc = np.sum(np.array(ClsSet))/len(ClsSet)
-    cls_5_acc = np.sum(np.array(ClsSet_5))/len(ClsSet_5)
-    final_cls.extend(ClsSet)
-    print('{} cls-loc acc is {}, loc acc is {}, cls acc is {}'.format(cls, cls_loc_acc, loc_acc, cls_acc))
-    with open('inference_CorLoc.txt', 'a+') as corloc_f:
-        corloc_f.write('{} {}\n'.format(cls, loc_acc))
+    print('{} cls-loc acc is {}, loc acc is {}, loc acc 5 is {}'.format(cls, cls_loc_acc, loc_acc, cls_loc_acc_top5))
     accs.append(cls_loc_acc)
     accs_top5.append(cls_loc_acc_top5)
     loc_accs.append(loc_acc)
-    cls_accs.append(cls_acc)
-    cls_5_accs.append(cls_5_acc)
     if (k+1) %100==0:
         print(k)
 
@@ -271,10 +247,4 @@ for k in range(1000):
 print(accs)
 print('Cls-Loc acc {}'.format(np.mean(accs)))
 print('Cls-Loc acc Top 5 {}'.format(np.mean(accs_top5)))
-
 print('GT Loc acc {}'.format(np.mean(loc_accs)))
-print('{} cls acc {}'.format(args.arch, np.mean(cls_accs)))
-print('{} cls_5_acc {}'.format(args.arch, np.mean(cls_5_accs)))
-with open('Corloc_result.txt', 'w') as f:
-    for k in sorted(result.keys()):
-        f.write('{} {}\n'.format(k, str(result[k])))
