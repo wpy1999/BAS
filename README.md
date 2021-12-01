@@ -66,7 +66,7 @@ To test the CUB models, you can download the trained models from
 [ [Google Drive (Inceptionv3)](https://drive.google.com/file/d/1Mj_lGjcFwlzYXe4TcJNeXhE0a2iFw9qR/view?usp=sharing) ],
 then run `BAS_inference.py`:
 ```bash  
-cd ILSVRC
+cd CUB
 python BAS_inference.py
 ```
 
