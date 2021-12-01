@@ -78,7 +78,7 @@ python BAS_inference.py
 
 
 <p align="center">
-    <img src="https://github.com/wpy1999/BAS/tree/main/Img/result.png" width="750"/> <br />
+    <img src="./Img/result.png" width="750"/> <br />
     <em> 
     </em>
 </p>
