@@ -91,7 +91,7 @@ To test the CUB models, you can download the trained models from
 then run `BAS_inference.py`:
 ```bash  
 cd CUB
-python BAS_inference.py --arch vgg
+python BAS_inference.py --arch ${Backbone}
 ```
 
 To test the ILSVRC models, you can download the trained models from
@@ -102,7 +102,7 @@ To test the ILSVRC models, you can download the trained models from
 then run `BAS_inference.py`:
 ```bash  
 cd ILSVRC
-python BAS_inference.py --arch vgg
+python BAS_inference.py --arch ${Backbone}
 ```
 
 ## 📊 Experimental Results <a name="7"></a> 
