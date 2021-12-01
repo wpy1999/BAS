@@ -39,7 +39,8 @@ Weakly supervised object localization (WSOL) aims to localize the object region 
 
 ## 📃 Requirements <a name="5"></a> 
   - python 3.6.10 
-  - pytorch 1.4.0
+  - torch 1.4.0
+  - torchvision 0.5.0
   - opencv 4.5.3
 
 ## ✏️ Usage <a name="6"></a> 
