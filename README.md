@@ -76,11 +76,9 @@ python BAS_inference.py
 
 ## 📊 Experimental Results <a name="6"></a> 
 
-<p align="center">
-    <img src="https://github.com/wpy1999/BAS/tree/main/Img/result.png" width="750"/> <br />
-    <em> 
-    </em>
-</p>
+
+    ![image](https://github.com/wpy1999/BAS/tree/main/Img/result.png)
+
 
 ## ✉️ Statement <a name="7"></a> 
 This project is for research purpose only, please contact us for the licence of commercial use. For any other questions please contact [wpy364755620@mail.ustc.edu.cn](wpy364755620@mail.ustc.edu.cn) or [wzhai056@mail.ustc.edu.cn](wzhai056@mail.ustc.edu.cn).
