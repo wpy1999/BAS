@@ -84,10 +84,10 @@ We will release our training code upon acceptance.
 ### Inference <a name="64"></a> 
 
 To test the CUB models, you can download the trained models from
-[ [Google Drive (VGG16)]( https://drive.google.com/file/d/1phmgYfoLrUU1W5Dr8S1sdlIdW7BVf726/view?usp=sharing) ],
-[ [Google Drive (Mobilenetv1)]( https://drive.google.com/file/d/1RjS0_tXVaERJHnZ25RvHD_EmCsXZQxRS/view?usp=sharing) ],
-[ [Google Drive (ResNet50)](https://drive.google.com/file/d/1NHs1DOooovaFX7VTZi6LlXyLLIMarJN8/view?usp=sharing) ],
-[ [Google Drive (Inceptionv3)](https://drive.google.com/file/d/1Mj_lGjcFwlzYXe4TcJNeXhE0a2iFw9qR/view?usp=sharing) ],
+[ [Google Drive (VGG16)]( https://drive.google.com/file/d/1c3okqQWJNEv-riAuEKzm9pFAvMtm6ISk/view?usp=sharing) ],
+[ [Google Drive (Mobilenetv1)]( https://drive.google.com/file/d/1_i1XEO9bSlietnrgFnVoBlOaRGhPnPh2/view?usp=sharing) ],
+[ [Google Drive (ResNet50)](https://drive.google.com/file/d/13qPalet2zTRosFz9PJOP1GrLYyEb4NNF/view?usp=sharing) ],
+[ [Google Drive (Inceptionv3)](https://drive.google.com/file/d/1hZOjU5kqpdZZK1WO-bi5zICPpFj6Bi7d/view?usp=sharing) ],
 then run `BAS_inference.py`:
 ```bash  
 cd CUB
