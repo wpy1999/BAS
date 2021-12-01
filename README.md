@@ -28,7 +28,7 @@ Weakly supervised object localization (WSOL) aims to localize the object region 
 ## ✨ Motivation <a name="3"></a> 
 
 <p align="center">
-    <img src="./Img/motivation.png" width="750"/> <br />
+    <img src="./Img/motivation.png" width="550"/> <br />
     <em> 
     </em>
 </p>
