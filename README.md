@@ -1,4 +1,4 @@
-# Background Activation Suppression for Weakly Supervised Object Localization
+# Background Activation Suppression for Weakly Supervised Object Localization (CVPR2022)
 
 PyTorch implementation of ''Background Activation Suppression for Weakly Supervised Object Localization''. This repository contains PyTorch training code, inference code and pretrained models.
 
