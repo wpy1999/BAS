@@ -62,12 +62,13 @@ class Model(nn.Module):
             nn.Conv2d(512, 1000, kernel_size=3, padding=1),
             nn.Sigmoid(),
         ) 
-        self.conv_copy_5_1 = copy.deepcopy(self.conv5_1)  ## Its weight will be overwritten in the forward propagation
-        self.conv_copy_5_2 = copy.deepcopy(self.conv5_2)  ## The complete code will be made public after the paper is accepted
+        self.conv_copy_5_1 = copy.deepcopy(self.conv5_1)   
+        self.conv_copy_5_2 = copy.deepcopy(self.conv5_2)   
         self.conv_copy_5_3 = copy.deepcopy(self.conv5_3)  
         self.classifier_cls_copy = copy.deepcopy(self.classifier_cls)
 
     def forward(self, x, label=None,N=1):
+        self.weight_deepcopy()
         batch = x.size(0)
 
         x = self.conv1_1(x)
@@ -120,6 +121,11 @@ class Model(nn.Module):
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
 
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]]
+
 ## x_saliency    
         x_saliency_all = self.classifier_loc(x_4)
         x_saliency =  torch.zeros(batch, 1, 28, 28).cuda()
@@ -127,7 +133,44 @@ class Model(nn.Module):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
         self.x_saliency = x_saliency
 
-        return self.score_1
+## erase
+        x_erase = x_4.detach() * ( 1 - x_saliency)        
+        x_erase = self.pool4(x_erase)
+        x_erase = self.conv_copy_5_1(x_erase)
+        x_erase = self.relu5_1(x_erase)
+        x_erase = self.conv_copy_5_2(x_erase)
+        x_erase = self.relu5_2(x_erase)
+        x_erase = self.conv_copy_5_3(x_erase)
+        x_erase = self.relu5_3(x_erase)
+        x_erase = self.classifier_cls_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1)
+
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
+
+##  score_2 
+        x = self.feature_map * nn.AvgPool2d(2)(self.x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)        
+
+##  loss      
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum+1e-8)
+        res[x_res>x_sum] = 0
+        x_saliency =  x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+        loss_loc = res + x_saliency 
+## loss 
+        loss_loc = loss_loc.mean(0) 
+
+##  loss_cls 
+        loss_fnc = nn.CrossEntropyLoss()
+        loss_cls_1 = loss_fnc(self.score_1, label).cuda()
+        loss_cls_2 = loss_fnc(self.score_2, label).cuda()
+        loss_cls = loss_cls_1 + loss_cls_2 * 0.05
+        return self.score_1, loss_cls , loss_loc 
     
     def normalize_atten_maps(self, atten_maps):
         atten_shape = atten_maps.size()
@@ -140,10 +183,22 @@ class Model(nn.Module):
         atten_normed = atten_normed.view(atten_shape)
 
         return atten_normed
+    
+    def weight_deepcopy(self):
+        self.conv_copy_5_1.weight.data = self.conv5_1.weight.clone().detach()
+        self.conv_copy_5_2.weight.data = self.conv5_2.weight.clone().detach()
+        self.conv_copy_5_3.weight.data = self.conv5_3.weight.clone().detach()
+        self.conv_copy_5_1.bias.data = self.conv5_1.bias.clone().detach()
+        self.conv_copy_5_2.bias.data = self.conv5_2.bias.clone().detach()
+        self.conv_copy_5_3.bias.data = self.conv5_3.bias.clone().detach()
+        for i in range(len(self.classifier_cls)):
+            if 'Conv' in str(self.classifier_cls[i]) or 'BatchNorm2d' in str(self.classifier_cls[i]):
+                self.classifier_cls_copy[i].weight.data = self.classifier_cls[i].weight.clone().detach()
+                self.classifier_cls_copy[i].bias.data = self.classifier_cls[i].bias.clone().detach()
 
         
 def weight_init(m):
-    classname = m.__class__.__name__  ## __class__将实例指向类，然后调用类的__name__属性
+    classname = m.__class__.__name__   
     if classname.find('Conv') != -1:
         m.weight.data.normal_(0.0, 0.02)
     elif classname.find('BatchNorm') != -1:
@@ -153,8 +208,7 @@ def weight_init(m):
         m.weight.data.normal_(0, 0.01)
         m.weight.data.fill_(0) 
 
-def model(args, pretrained=False):
-    # base and dilation can be modified according to your needs
+def model(args, pretrained=True):
     model = Model(args)
     model.apply(weight_init)   
     if pretrained:

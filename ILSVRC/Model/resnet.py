@@ -1,7 +1,3 @@
-"""
-Original code: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
-"""
-
 import os
 import torch
 import torch.nn as nn
@@ -15,9 +11,6 @@ import numpy as np
 import cv2
 import copy
 import matplotlib.pyplot as plt
-model_urls = {
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-}
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -95,10 +88,11 @@ class ResNetCam(nn.Module):
         )   
         
         initialize_weights(self.modules(), init_mode='xavier')
-        self.classifier_cls_copy = copy.deepcopy(self.classifier_cls)  ## Its weight will be overwritten in the forward propagation
-        self.layer4_copy = copy.deepcopy(self.layer4)  ## The complete code will be made public after the paper is accepted
+        self.classifier_cls_copy = copy.deepcopy(self.classifier_cls)  
+        self.layer4_copy = copy.deepcopy(self.layer4)   
  
-    def forward(self, x, label=None,N=1):        
+    def forward(self, x, label=None,N=1): 
+        self.weight_deepcopy()       
         batch = x.size(0)
 
         x = self.conv1(x)
@@ -118,13 +112,16 @@ class ResNetCam(nn.Module):
         x = self.classifier_cls(x)
         self.feature_map = x
 
-## score
         self.score_1 = self.avg_pool(x).squeeze(-1).squeeze(-1)
 # p_label 
         if N == 1:
             p_label = label.unsqueeze(-1)
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]]
             
 ## x_saliency    
         x_saliency_all = self.classifier_loc(x_3)
@@ -133,10 +130,39 @@ class ResNetCam(nn.Module):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
         self.x_saliency = x_saliency
 
-        return self.score_1
+##  erase
+        x_erase = x_3.detach() * (1-x_saliency)
+        x_erase = F.max_pool2d(x_erase, kernel_size=2)
+        x_erase = self.layer4_copy(x_erase)
+        x_erase = self.classifier_cls_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1)
 
-######################################################################
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
 
+##  score_2 
+        x = self.feature_map * nn.AvgPool2d(2)(self.x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)   
+
+##  loss_bas      
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum+1e-8)
+        res[x_res>x_sum] = 0
+        x_saliency =  x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+        loss_loc = res  + x_saliency * 2
+
+        loss_loc = loss_loc.mean(0) 
+
+##  loss_cls 
+        loss_fnc = nn.CrossEntropyLoss()
+        loss_cls_1 = loss_fnc(self.score_1, label).cuda()
+        loss_cls_2 = loss_fnc(self.score_2, label).cuda()
+        loss_cls = loss_cls_1 + loss_cls_2 
+        return self.score_1, loss_cls , loss_loc 
 
 
     def _make_layer(self, block, planes, blocks, stride):
@@ -167,7 +193,26 @@ class ResNetCam(nn.Module):
 
         return atten_normed
 
+    def weight_deepcopy(self):
+        for i in range(len(self.classifier_cls)):
+            if 'Conv' in str(self.classifier_cls[i]) or 'BatchNorm2d' in str(self.classifier_cls[i]):
+                self.classifier_cls_copy[i].weight.data = self.classifier_cls[i].weight.clone().detach()
+                self.classifier_cls_copy[i].bias.data = self.classifier_cls[i].bias.clone().detach()
+        for i in range(len(self.layer4)):
+            self.layer4_copy[i].conv1.weight.data = self.layer4[i].conv1.weight.clone().detach()
+            self.layer4_copy[i].conv2.weight.data = self.layer4[i].conv2.weight.clone().detach()
+            self.layer4_copy[i].conv3.weight.data = self.layer4[i].conv3.weight.clone().detach()
 
+            self.layer4_copy[i].bn1.weight.data = self.layer4[i].bn1.weight.clone().detach()
+            self.layer4_copy[i].bn1.bias.data = self.layer4[i].bn1.bias.clone().detach()
+            self.layer4_copy[i].bn2.weight.data = self.layer4[i].bn2.weight.clone().detach()
+            self.layer4_copy[i].bn2.bias.data = self.layer4[i].bn2.bias.clone().detach()
+            self.layer4_copy[i].bn3.weight.data = self.layer4[i].bn3.weight.clone().detach()
+            self.layer4_copy[i].bn3.bias.data = self.layer4[i].bn3.bias.clone().detach()
+
+        self.layer4_copy[0].downsample[0].weight.data = self.layer4[0].downsample[0].weight.clone().detach()
+        self.layer4_copy[0].downsample[1].weight.data = self.layer4[0].downsample[1].weight.clone().detach()
+        self.layer4_copy[0].downsample[1].bias.data = self.layer4[0].downsample[1].bias.clone().detach()
 
 def get_downsampling_layer(inplanes, block, planes, stride):
     outplanes = planes * block.expansion
@@ -191,7 +236,7 @@ def load_pretrained_model(model):
     return model
 
 
-def model(args, pretrained=False):
+def model(args, pretrained=True):
     model = ResNetCam(Bottleneck, [3, 4, 6, 3], args)
     if pretrained:
         model = load_pretrained_model(model)

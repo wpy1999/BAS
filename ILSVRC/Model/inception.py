@@ -56,6 +56,7 @@ class Model(nn.Module):
         self.Mixed_7c_copy = copy.deepcopy(self.Mixed_7c)
 
     def forward(self, x, label=None, N=1):
+        self.weight_deepcopy()
         batch = x.size(0)
 
         x = self.Conv2d_1a_3x3(x)
@@ -106,6 +107,10 @@ class Model(nn.Module):
             p_label = label.unsqueeze(-1)
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]] 
 
 ## x_saliency    
         x_saliency_all = self.classifier_loc(x_3)
@@ -113,8 +118,39 @@ class Model(nn.Module):
         for i in range(batch):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
         self.x_saliency = x_saliency
+## erase
+        x_erase = x_3.detach() * (1 - x_saliency)
+        x_erase = self.Mixed_7a_copy(x_erase)
+        x_erase = self.Mixed_7b_copy(x_erase)
+        x_erase = self.Mixed_7c_copy(x_erase)
+        x_erase = self.classifier_cls_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1)
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
+        
+##  score_2 
+        x = self.feature_map * nn.AvgPool2d(2)(self.x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)          
 
-        return self.score_1
+##  loss_loc      
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum+1e-8)
+        res[x_res>x_sum] = 0
+        x_saliency =  x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+        loss_loc = res  + x_saliency * 2.5
+
+        loss_loc = loss_loc.mean(0) 
+
+##  loss_cls 
+        loss_fnc = nn.CrossEntropyLoss()
+        loss_cls_1 = loss_fnc(self.score_1, label).cuda()
+        loss_cls_2 = loss_fnc(self.score_2, label).cuda()
+        loss_cls = loss_cls_1 + loss_cls_2  
+        return self.score_1, loss_cls , loss_loc 
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -140,6 +176,23 @@ class Model(nn.Module):
         atten_normed = atten_normed.view(atten_shape)
 
         return atten_normed
+
+    def weight_deepcopy(self):
+        for i in range(len(self.classifier_cls)):
+            if 'Conv' in str(self.classifier_cls[i]) or 'BatchNorm2d' in str(self.classifier_cls[i]):
+                self.classifier_cls_copy[i].weight.data = self.classifier_cls[i].weight.clone().detach()
+                self.classifier_cls_copy[i].bias.data = self.classifier_cls[i].bias.clone().detach()
+        
+        for i in InceptionD_list:
+            exec('self.Mixed_7a_copy.' + i + '.conv.weight.data' + '=' + 'self.Mixed_7a.' + i + '.conv.weight.clone().detach()')
+            exec('self.Mixed_7a_copy.' + i + '.bn.weight.data'+ '=' + 'self.Mixed_7a.' + i + '.bn.weight.clone().detach()')
+            exec('self.Mixed_7a_copy.' + i + '.bn.bias.data'+ '=' + 'self.Mixed_7a.' + i + '.bn.bias.clone().detach()')
+        for i in InceptionE_list:
+            for j in copy_list:
+                exec('self.' + j + '_copy.' + i + '.conv.weight.data'+ '=' + 'self.' +  j + '.' + i + '.conv.weight.clone().detach()')
+                exec('self.' + j + '_copy.' + i + '.bn.weight.data' + '=' + 'self.' + j + '.' + i + '.bn.weight.clone().detach()')
+                exec('self.' + j + '_copy.' + i + '.bn.bias.data' + '=' + 'self.' + j + '.' + i + '.bn.bias.clone().detach()')
+
 
 class InceptionA(nn.Module):
 
