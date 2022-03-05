@@ -46,7 +46,7 @@ class Model(nn.Module):
         self.relu5_2 = nn.ReLU(inplace=True)
         self.conv5_3 = nn.Conv2d(512, 512, kernel_size=3, padding=1) ## -> 512x14x14
         self.relu5_3 = nn.ReLU(inplace=True)
-        self.pool5 = nn.MaxPool2d(2) ## -> 512x14x14
+        self.pool5 = nn.MaxPool2d(2)  
 
         self.avg_pool = nn.AvgPool2d(14) ## ->(512,1,1)
 
@@ -62,7 +62,15 @@ class Model(nn.Module):
             nn.Conv2d(512, 200, kernel_size=3, padding=1),  ## num_classes
             nn.Sigmoid(),
         ) 
-    def forward(self, x, label=None,N=1):
+    def forward(self, x, label=None, N=1):
+        conv_copy_5_1 = copy.deepcopy(self.conv5_1)
+        relu_copy_5_1 = copy.deepcopy(self.relu5_1)
+        conv_copy_5_2 = copy.deepcopy(self.conv5_2)
+        relu_copy_5_2 = copy.deepcopy(self.relu5_2)
+        conv_copy_5_3 = copy.deepcopy(self.conv5_3)
+        relu_copy_5_3 = copy.deepcopy(self.relu5_3)
+        classifier_cls_copy = copy.deepcopy(self.classifier_cls)
+
         batch = x.size(0)
         x = self.conv1_1(x)
         x = self.relu1_1(x)
@@ -114,14 +122,56 @@ class Model(nn.Module):
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
 
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]]
+
 ## x_saliency    
-        x_saliency_all  = self.classifier_loc(x_4)
-        x_saliency =  torch.zeros(batch, 1, 28, 28).cuda()
+        x_saliency_all = self.classifier_loc(x_4)
+        x_saliency = torch.zeros(batch, 1, 28, 28).cuda()
         for i in range(batch):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
         self.x_saliency = x_saliency
 
-        return self.score_1
+## erase 
+        x_erase = x_4.detach() * ( 1 - x_saliency) 
+
+        x_erase = self.pool4(x_erase)
+        x_erase = conv_copy_5_1(x_erase)
+        x_erase = relu_copy_5_1(x_erase)
+        x_erase = conv_copy_5_2(x_erase)
+        x_erase = relu_copy_5_2(x_erase)
+        x_erase = conv_copy_5_3(x_erase)
+        x_erase = relu_copy_5_3(x_erase)
+        x_erase = classifier_cls_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1)
+
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
+
+## score_2
+        x = self.feature_map * nn.AvgPool2d(2)(self.x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)
+
+        return self.score_1, self.score_2
+    
+    def bas_loss(self):
+        batch = self.x_sum.size(0)
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum + 1e-8)
+        res[x_res>=x_sum] = 0 ## or 1
+
+        x_saliency = self.x_saliency
+        x_saliency = x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+
+        loss = res + x_saliency * 0.7
+        loss = loss.mean(0) 
+        return loss
     
     def normalize_atten_maps(self, atten_maps):
         atten_shape = atten_maps.size()
@@ -146,7 +196,7 @@ def weight_init(m):
         m.weight.data.normal_(0, 0.01)
         m.weight.data.fill_(0) 
 
-def model(args, pretrained=False):
+def model(args, pretrained=True):
     
     model = Model(args)
     if pretrained:

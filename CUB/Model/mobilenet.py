@@ -10,7 +10,7 @@ import torchvision.models as models
 
 
 class Model(nn.Module):
-    def __init__(self,args):
+    def __init__(self, args):
         super(Model, self).__init__()
         def conv_bn(inp, oup, stride):
             return nn.Sequential(
@@ -59,7 +59,9 @@ class Model(nn.Module):
         ) 
         self._initialize_weights()
 
-    def forward(self, x, label=None,N=1):
+    def forward(self, x, label=None, N=1):
+        erase_branch = copy.deepcopy(self.model[-2:])
+        classifier_cls_copy = copy.deepcopy(self.classifier_cls)
         
         batch = x.size(0)
         x = self.model[:-2](x)
@@ -78,14 +80,49 @@ class Model(nn.Module):
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
 
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]]
+
 ## x_saliency    
         x_saliency_all = self.classifier_loc(x_4)
-        x_saliency =  torch.zeros(batch, 1, 28, 28).cuda()
+        x_saliency = torch.zeros(batch, 1, 28, 28).cuda()
         for i in range(batch):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
         self.x_saliency = x_saliency
 
-        return self.score_1
+## erase
+        x_erase = x_4.detach() * ( 1 - x_saliency)
+        x_erase = erase_branch(x_erase)
+        x_erase = classifier_cls_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1) 
+
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
+
+## score_2
+        x = self.feature_map * nn.AvgPool2d(2)(self.x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)
+
+        return self.score_1, self.score_2 
+
+    def bas_loss(self):
+        batch = self.x_sum.size(0)
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum + 1e-8)
+        res[x_res>=x_sum] = 0 ## or 1
+
+        x_saliency =  self.x_saliency
+        x_saliency =  x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+        
+        loss = res + x_saliency * 1.5
+        loss = loss.mean(0) 
+        return loss
 
     def normalize_atten_maps(self, atten_maps):
         atten_shape = atten_maps.size()
@@ -113,7 +150,7 @@ class Model(nn.Module):
                 m.bias.data.zero_()
 
 
-def model(args, pretrained=False):
+def model(args, pretrained=True):
     
     model = Model(args)
     if pretrained:

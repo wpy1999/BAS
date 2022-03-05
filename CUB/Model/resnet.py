@@ -9,9 +9,6 @@ import numpy as np
 import cv2
 import copy
 import matplotlib.pyplot as plt
-model_urls = {
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-}
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -55,8 +52,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNetCam(nn.Module):
-    def __init__(self, block, layers, args, num_classes=200,
-                 large_feature_map=True):
+    def __init__(self, block, layers, args, large_feature_map=True):
         super(ResNetCam, self).__init__()
 
         stride_l3 = 1 if large_feature_map else 2
@@ -90,8 +86,10 @@ class ResNetCam(nn.Module):
         initialize_weights(self.modules(), init_mode='xavier')
         
     def forward(self, x, label=None, N=1):
-        batch = x.size(0)
+        classifier_cls_copy = copy.deepcopy(self.classifier_cls)
+        layer4_copy = copy.deepcopy(self.layer4)
 
+        batch = x.size(0)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -116,15 +114,51 @@ class ResNetCam(nn.Module):
             p_label = label.unsqueeze(-1)
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
+
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]]
     
 ## x_saliency    
         x_saliency_all = self.classifier_loc(x_3)
-        x_saliency =  torch.zeros(batch, 1, 28, 28).cuda()
+        x_saliency = torch.zeros(batch, 1, 28, 28).cuda()
         for i in range(batch):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
         self.x_saliency = x_saliency
 
-        return self.score_1
+##  erase
+        x_erase = x_3.detach() *  (1 - x_saliency)
+        x_erase = F.max_pool2d(x_erase, kernel_size=2)
+        x_erase = layer4_copy(x_erase) 
+        x_erase = classifier_cls_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1)
+
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
+
+## score_2
+        x = self.feature_map * nn.AvgPool2d(2)(x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)
+
+        return self.score_1, self.score_2 
+
+    def bas_loss(self):
+        batch = self.x_sum.size(0)
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum + 1e-8)
+        res[x_res>=x_sum] = 0 ## or 1
+
+        x_saliency =  self.x_saliency
+        x_saliency =  x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+        
+        loss = res  + x_saliency * 1.2
+        loss = loss.mean(0) 
+        return loss
 
 
     def _make_layer(self, block, planes, blocks, stride):
@@ -177,7 +211,7 @@ def load_pretrained_model(model):
     return model
 
 
-def model(args, pretrained=False):
+def model(args, pretrained=True):
     model = ResNetCam(Bottleneck, [3, 4, 6, 3], args)
     if pretrained:
         model = load_pretrained_model(model)

@@ -41,15 +41,19 @@ class Model(nn.Module):
         )
 
         self.classifier_loc = nn.Sequential( 
-            nn.Conv2d(768, 200, kernel_size=3, padding=1 ),      
+            nn.Conv2d(768, 200, kernel_size=3, padding=1),      
             nn.Sigmoid(),
         )
 
         self._initialize_weights()
 
     def forward(self, x, label=None, N=1):
-        batch = x.size(0)
+        classifier_copy = copy.deepcopy(self.classifier)
+        Mixed_7a_copy = copy.deepcopy(self.Mixed_7a)
+        Mixed_7b_copy = copy.deepcopy(self.Mixed_7b)
+        Mixed_7c_copy = copy.deepcopy(self.Mixed_7c)
 
+        batch = x.size(0)
         x = self.Conv2d_1a_3x3(x)
         # 112 x 112 x 32
         x = self.Conv2d_2a_3x3(x)
@@ -76,13 +80,9 @@ class Model(nn.Module):
         x = self.Mixed_6c(x)
         x = self.Mixed_6d(x)
         x = self.Mixed_6e(x)
-
-##  x_saliency           
         x_3 = x.clone()
-        x_saliency = self.classifier_loc(x_3) ## (28,28)
-        self.x_saliency = x_saliency
-        
-        x = self.Mixed_7a(x)  ## (14,14)
+        # 14 x 14 x 768
+        x = self.Mixed_7a(x)  
         x = self.Mixed_7b(x)
         x = self.Mixed_7c(x)
         
@@ -99,14 +99,52 @@ class Model(nn.Module):
         else:
             _, p_label = self.score_1.topk(N, 1, True, True)
 
+# x_sum   
+        self.x_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_sum[i] = self.score_1[i][label[i]]
+            
 ## x_saliency    
         x_saliency_all = self.classifier_loc(x_3)
-        x_saliency =  torch.zeros(batch, 1, 28, 28).cuda()
+        x_saliency = torch.zeros(batch, 1, 28, 28).cuda()
         for i in range(batch):
             x_saliency[i][0] = x_saliency_all[i][p_label[i]].mean(0)
-        self.x_saliency =   x_saliency
+        self.x_saliency = x_saliency
 
-        return self.score_1
+## erase
+        x_erase = x_3.detach() * (1 - x_saliency)
+        x_erase = Mixed_7a_copy(x_erase)
+        x_erase = Mixed_7b_copy(x_erase)
+        x_erase = Mixed_7c_copy(x_erase)
+         
+        x_erase = classifier_copy(x_erase)
+        x_erase = self.avg_pool(x_erase).view(x_erase.size(0), -1)
+
+## x_erase_sum
+        self.x_erase_sum = torch.zeros(batch).cuda()
+        for i in range(batch):
+            self.x_erase_sum[i] = x_erase[i][label[i]]
+
+## score_2
+        x = self.feature_map * nn.AvgPool2d(2)(x_saliency)
+        self.score_2 = self.avg_pool(x).squeeze(-1).squeeze(-1)
+
+        return self.score_1, self.score_2 
+    
+    def bas_loss(self):
+        batch = self.x_sum.size(0)
+        x_sum = self.x_sum.clone().detach()
+        x_res = self.x_erase_sum
+        res = x_res / (x_sum + 1e-8)
+        res[x_res>=x_sum] = 0 ## or 1
+
+        x_saliency =  self.x_saliency
+        x_saliency =  x_saliency.clone().view(batch, -1)
+        x_saliency = x_saliency.mean(1)  
+        
+        loss = res  + x_saliency * 1.0
+        loss = loss.mean(0) 
+        return loss
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -334,7 +372,7 @@ class BasicConv2d(nn.Module):
         x = self.bn(x)
         return F.relu(x, inplace=True)
 
-def model(args, pretrained=False):
+def model(args, pretrained=True):
     # base and dilation can be modified according to your needs
     model = Model(args)
     if pretrained:
