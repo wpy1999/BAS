@@ -79,7 +79,9 @@ cd BAS
 
 ### Training <a name="63"></a> 
 
-We will release our training code upon acceptance.
+```
+python train.py --arch ${Backbone}
+```
 
 ### Inference <a name="64"></a> 
 
