@@ -141,7 +141,7 @@ for k in range(200):
             img = transform(raw_img)
             img = torch.unsqueeze(img, 0)
             img = img.to(0)
-            reg_outputs = model(img,torch.tensor([class_to_idx[cls]]),args.top_k)
+            reg_outputs,_ = model(img,torch.tensor([class_to_idx[cls]]),args.top_k)
             
             cam = model.x_saliency[0][0].data.cpu()
             cam = normalize_map(np.array(cam),w,h)
@@ -166,7 +166,7 @@ for k in range(200):
             if TEN_CROP:
                 img = ten_crop_aug(raw_img)
                 img = img.to(0)
-                vgg16_out = model(img,torch.tensor(class_to_idx[cls]).expand(10))
+                vgg16_out,_ = model(img,torch.tensor(class_to_idx[cls]).expand(10))
                 vgg16_out = nn.Softmax()(vgg16_out)
                 vgg16_out = torch.mean(vgg16_out,dim=0,keepdim=True)
                 vgg16_out = torch.topk(vgg16_out, 5, 1)[1]
@@ -174,7 +174,7 @@ for k in range(200):
                 img = cls_transform(raw_img)
                 img = torch.unsqueeze(img, 0)
                 img = img.to(0)
-                vgg16_out = model(img,[class_to_idx[cls]])
+                vgg16_out,_ = model(img,[class_to_idx[cls]])
                 vgg16_out = torch.topk(vgg16_out, 5, 1)[1]
             vgg16_out = to_data(vgg16_out)
             vgg16_out = torch.squeeze(vgg16_out)
