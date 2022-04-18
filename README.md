@@ -116,6 +116,8 @@ python BAS_inference.py --arch ${Backbone}
     </em>
 </p>
 
+<img src="./Img/result.gif" alt="show" />
+
 <p align="center">
     <img src="./Img/accuracy.png" width="750"/> <br />
     <em> 
