@@ -110,12 +110,6 @@ python BAS_inference.py --arch ${Backbone}
 ## 📊 Experimental Results <a name="7"></a> 
 
 
-<p align="center">
-    <img src="./Img/result.png" width="750"/> <br />
-    <em> 
-    </em>
-</p>
-
 <img src="./Img/result.gif" alt="show" />
 
 <p align="center">
