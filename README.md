@@ -22,6 +22,8 @@ PyTorch implementation of ''Background Activation Suppression for Weakly Supervi
 * Authors: Pingyu Wu*, Wei Zhai*, Yang Cao
 * Institution: University of Science and Technology of China (USTC)
 
+<img src="./Img/result.gif" alt="show" />
+
 ## 💡 Abstract <a name="2"></a> 
 Weakly supervised object localization (WSOL) aims to localize objects using only image-level labels. Recently a new paradigm has emerged by generating a foreground prediction map (FPM) to achieve localization task. Existing FPM-based methods use cross-entropy (CE) to evaluate the foreground prediction map and to guide the learning of generator. We argue for using activation value to achieve more efficient learning. It is based on the experimental observation that, for a trained network, CE converges to zero when the foreground mask covers only part of the object region. While activation value increases until the mask expands to the object boundary, which indicates that more object areas can be learned by using activation value. In this paper, we propose a Background Activation Suppression (BAS) method. Specifically, an Activation Map Constraint module (AMC) is designed to facilitate the learning of generator by suppressing the background activation value. Meanwhile, by using the foreground region guidance and the area constraint, BAS can learn the whole region of the object. In the inference phase, we consider the prediction maps of different categories together to obtain the final localization results. Extensive experiments show that BAS achieves significant and consistent improvement over the baseline methods on the CUB-200-2011 and ILSVRC datasets. Code and models are available at https://github.com/wpy1999/BAS.
 
@@ -109,8 +111,11 @@ python BAS_inference.py --arch ${Backbone}
 
 ## 📊 Experimental Results <a name="7"></a> 
 
-
-<img src="./Img/result.gif" alt="show" />
+<p align="center">
+    <img src="./Img/result.png" width="750"/> <br />
+    <em> 
+    </em>
+</p>
 
 <p align="center">
     <img src="./Img/accuracy.png" width="750"/> <br />
