@@ -88,10 +88,10 @@ python train.py --arch ${Backbone}
 ### Inference <a name="64"></a> 
 
 To test the CUB models, you can download the trained models from
-[ [Google Drive (VGG16)]( https://drive.google.com/file/d/1c3okqQWJNEv-riAuEKzm9pFAvMtm6ISk/view?usp=sharing) ],
-[ [Google Drive (Mobilenetv1)]( https://drive.google.com/file/d/1_i1XEO9bSlietnrgFnVoBlOaRGhPnPh2/view?usp=sharing) ],
-[ [Google Drive (ResNet50)](https://drive.google.com/file/d/13qPalet2zTRosFz9PJOP1GrLYyEb4NNF/view?usp=sharing) ],
-[ [Google Drive (Inceptionv3)](https://drive.google.com/file/d/1hZOjU5kqpdZZK1WO-bi5zICPpFj6Bi7d/view?usp=sharing) ],
+[ VGG16 ([Google Drive]( https://drive.google.com/file/d/1c3okqQWJNEv-riAuEKzm9pFAvMtm6ISk/view?usp=sharing)), ([Baidu Drive]( https://pan.baidu.com/s/1JivgzBcojG0whMD6FHbXUQ?pwd=1999)) ],
+[ Mobilenetv1 ([Google Drive]( https://drive.google.com/file/d/1_i1XEO9bSlietnrgFnVoBlOaRGhPnPh2/view?usp=sharing)), ([Baidu Drive]( https://pan.baidu.com/s/19nfM5zd4nAabDOdlyCLcSA?pwd=1999)) ],
+[ ResNet50 ([Google Drive](https://drive.google.com/file/d/13qPalet2zTRosFz9PJOP1GrLYyEb4NNF/view?usp=sharing)), ([Baidu Drive](https://pan.baidu.com/s/1yD3ft_CCRJcdN3R1hv-3YA?pwd=1999)) ],
+[ Inceptionv3 ([Google Drive](https://drive.google.com/file/d/1hZOjU5kqpdZZK1WO-bi5zICPpFj6Bi7d/view?usp=sharing)), ([Baidu Drive](https://pan.baidu.com/s/16GR9g639tKbwqY0tKmQsxQ?pwd=1999)) ],
 then run `BAS_inference.py`:
 ```bash  
 cd CUB
@@ -99,10 +99,10 @@ python BAS_inference.py --arch ${Backbone}
 ```
 
 To test the ILSVRC models, you can download the trained models from
-[ [Google Drive (VGG16)]( https://drive.google.com/file/d/1BSaHxXnK0o-zem9IadrbwqafZnJQt8De/view?usp=sharing) ],
-[ [Google Drive (Mobilenetv1)]( https://drive.google.com/file/d/13MSMH_bzSBXVmNoc0MnFb2pQI0ePquhD/view?usp=sharing) ],
-[ [Google Drive (ResNet50)](https://drive.google.com/file/d/1Zmu1IGPy9lp5PfhC2u_jAcwt1nouRnTb/view?usp=sharing) ],
-[ [Google Drive (Inceptionv3)](https://drive.google.com/file/d/1xq9AOS-vxGtDVBqDvggANlyQuraS6_Is/view?usp=sharing) ],
+[ VGG16 ([Google Drive]( https://drive.google.com/file/d/1BSaHxXnK0o-zem9IadrbwqafZnJQt8De/view?usp=sharing)), ([Baidu Drive]( https://pan.baidu.com/s/1Fa0XrF8ou7pw_mmb8z_MKA?pwd=1999)) ],
+[ Mobilenetv1 ([Google Drive]( https://drive.google.com/file/d/13MSMH_bzSBXVmNoc0MnFb2pQI0ePquhD/view?usp=sharing)), ([Baidu Drive]( https://pan.baidu.com/s/1TG46KdhrIs1zZo46cJM8kw?pwd=1999)) ],
+[ ResNet50 ([Google Drive](https://drive.google.com/file/d/1Zmu1IGPy9lp5PfhC2u_jAcwt1nouRnTb/view?usp=sharing)), ([Baidu Drive]( https://pan.baidu.com/s/1dv6Xlap7fIXPkdVWTaMf1w?pwd=1999)) ],
+[ Inceptionv3 ([Google Drive](https://drive.google.com/file/d/1xq9AOS-vxGtDVBqDvggANlyQuraS6_Is/view?usp=sharing)), ([Baidu Drive]( https://pan.baidu.com/s/1XnsWZh4WUhAz0x401CkDAw?pwd=1999))],
 then run `BAS_inference.py`:
 ```bash  
 cd ILSVRC
