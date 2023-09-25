@@ -18,9 +18,13 @@ PyTorch implementation of ''Background Activation Suppression for Weakly Supervi
  12. [🔍 Citation](#9)
 
 ## 📎 Paper Link <a name="1"></a> 
-> Background Activation Suppression for Weakly Supervised Object Localization ([link](https://arxiv.org/pdf/2112.00580.pdf))
+> Background Activation Suppression for Weakly Supervised Object Localization (CVPR2022) ([link](https://arxiv.org/pdf/2112.00580.pdf))
 * Authors: Pingyu Wu*, Wei Zhai*, Yang Cao
 * Institution: University of Science and Technology of China (USTC)
+
+> Background Activation Suppression for Weakly Supervised Object Localization and Semantic Segmentation (IJCV) ([link](https://arxiv.org/pdf/2309.12943.pdf))
+* Authors: Wei Zhai*, Pingyu Wu*, Kai Zhu, Yang Cao, Feng Wu, Zheng-Jun Zha
+* Institution: University of Science and Technology of China (USTC) \& Institute of Artificial Intelligence, Hefei Comprehensive National Science Center
 
 <img src="./Img/result.gif" alt="show" />
 
